@@ -21,8 +21,6 @@ int main()
 
 	board* b1 = create_board(BOARD_SIZE);
 	fill_board(*b1, 0);
-	set_number(*b1, 2, 2, 9);
-	printf("test char  %c\n", 55 );
 
 	while (!WindowShouldClose())
 	{
@@ -32,11 +30,15 @@ int main()
 		show_board(*b1);
 		DrawFPS(10, 10); 
 		
-		char text[50];
-		sprintf(text, "X : %4f | Y : %4f", GetMousePosition().x, GetMousePosition().y);
-		DrawText(text, 100, 100, 30, RED);
-
 		change_value_mouse(*b1, GetMousePosition(), GetKeyPressed());
+
+		if(IsKeyPressed(' '))
+		{
+			// uint32_t x, y;
+			// get_empty_index(*b1, &x, &y);
+			// printf("VAL[%d, %d]\n", x, y);
+			solve_board(*b1);
+		}
 
 		EndDrawing(); // ! END DRAWING
 	}

@@ -35,10 +35,10 @@ typedef struct
 board* create_board(uint16_t size);
 void destroy_board(board* b);
 void fill_board(board b, uint32_t val);
-void set_number(board b,uint32_t x, uint32_t y, uint32_t val);
 void change_value_mouse(board b, Vector2 mouse_pos, uint32_t ascii_value);
 void show_board(board b);
 bool is_valid(board b, uint32_t n, uint32_t x, uint32_t y);
-
+bool get_empty_index(board b, uint32_t *x, uint32_t *y);
+bool solve_board(board b);
 
 #endif

@@ -9,7 +9,15 @@
 
 #include <math.h>
 
-// UTILS
+#define TERM_GREEN  "\x1B[32m"
+#define TERM_RED "\x1B[31m"
+#define TERM_WHITE "\x1B[37m"
+
+
+
+// ---------------------------
+// ---------- UTILZ ----------
+// ---------------------------
 
 /**
  * @brief Get the index for a flat array from x y
@@ -40,6 +48,51 @@ void* safe_malloc(size_t n)
 	return p;
 }
 
+/**
+ * @brief Free the momory allocated to a board
+ * 
+ * @param b
+ */
+void destroy_board(board* b)
+{
+	free(b->data);
+	free(b);
+}
+
+// ------------------------------------
+// ------------------------------------
+// ------------------------------------
+
+
+// --------------------------------------
+// ---------- BOARD MANAGEMENT ----------
+// --------------------------------------
+
+/**
+ * @brief Set a number in the board
+ * 
+ * @param b 
+ * @param x
+ * @param y
+ * @param val
+ */
+bool try_set_number(board b, uint32_t x, uint32_t y, uint32_t val)
+{
+	if(val == 0)
+	{
+		b.data[index_to_flat(x, y)] = val;
+		return false;
+	}
+
+	if(x > b.w || y > b.h)
+		return false;
+	
+	if (!is_valid(b, val, x, y))
+		return false;
+
+	b.data[index_to_flat(x, y)] = val;
+	return true;
+}
 
 /**
  * @brief Allocate memory for a board and returns a pointer to it
@@ -55,7 +108,6 @@ board* create_board(uint16_t size)
 	b->data = safe_malloc( (b->w)*(b->h) * sizeof(uint16_t) );
 	return b;
 }
-
 
 /**
  * @brief Fill a given board with a value
@@ -82,17 +134,6 @@ void fill_board(board b, uint32_t val)
 	// 	}
 	// 	printf("\n");
 	// }
-}
-
-/**
- * @brief Free the momory allocated to a board
- * 
- * @param b
- */
-void destroy_board(board* b)
-{
-	free(b->data);
-	free(b);
 }
 
 /**
@@ -154,28 +195,15 @@ void show_board(board b)
 	}
 }
 
-/**
- * @brief Set a number in the board
- * 
- * @param b 
- * @param x
- * @param y
- * @param val
- */
-void set_number(board b,uint32_t x, uint32_t y, uint32_t val)
-{
-	if(val == 0)
-		b.data[index_to_flat(x, y)] = val;
+// ------------------------------------
+// ------------------------------------
+// ------------------------------------
 
-	if(x > b.w || y > b.h)
-		return;
-	
-	if (!is_valid(b, val, x, y))
-		return;
 
-	b.data[index_to_flat(x, y)] = val;
-	printf("SETTED DATA[%d, %d] to %d\n", x, y, val);
-}
+
+// --------------------------------------
+// --------------- SUDOKU ---------------
+// --------------------------------------
 
 /**
  * @brief Change the value aimed by the mouse
@@ -218,7 +246,7 @@ void change_value_mouse(board b, Vector2 mouse_pos, uint32_t ascii_value)
 	if( ( (ascii_value > '0' ) && (ascii_value > '9') ) ||
 		( (ascii_value >= 320) && (ascii_value <= 329) ))
 	{
-		set_number(b, xpos, ypos, ascii_value % 320);
+		try_set_number(b, xpos, ypos, ascii_value % 320);
 	}
 }
 
@@ -263,3 +291,69 @@ bool is_valid(board b, uint32_t n, uint32_t x, uint32_t y)
 
 	return true;
 }
+
+
+/**
+ * @brief Get empty coord
+ * 		  Returns false if not found
+ * @param b
+ * @param x
+ * @param y
+ * @return true
+ * @return false
+ */
+bool get_empty_index(board b, uint32_t *x, uint32_t *y)
+{
+	for (int i = 0; i < b.w; i++)
+	{
+		for (int j = 0; j < b.h; j++)
+		{
+			if( b.data[index_to_flat(i, j)] == 0)
+			{
+				*x = i;
+				*y = j;
+				return true;
+			}				
+		}
+	}
+	return false; // solved
+}
+
+/**
+ * @brief Solve a board, 
+ * 
+ * @param b
+ * @return true
+ * @return false
+ */
+bool solve_board(board b)
+{
+	uint32_t empty_x, empty_y;
+	if(!get_empty_index(b, &empty_x, &empty_y))
+	{   
+		return true; // FINISHED SOLVING
+	}
+
+	// Try values from [1 to 9] in that empty pos
+	for (int i = 0; i < 10; i++)
+	{
+		// Try to put i in empty pos
+		if (try_set_number(b, empty_x, empty_y, i)) // Worked
+		{
+			if(solve_board(b)) // Try again with updated board
+			{
+				return true;
+			}
+			else // Can't place anything anymore
+			{
+				// Backtrack - Reset the last element we tried
+				try_set_number(b, empty_x, empty_y, 0);
+			}
+		}
+	}
+	return false;
+}
+
+// ------------------------------------
+// ------------------------------------
+// ------------------------------------
