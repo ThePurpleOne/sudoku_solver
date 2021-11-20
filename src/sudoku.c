@@ -243,11 +243,12 @@ void change_value_mouse(board b, Vector2 mouse_pos, uint32_t ascii_value)
 
 	// Check if value is valid
 	// Takes keypad too
-	if( ( (ascii_value > '0' ) && (ascii_value > '9') ) ||
+	if( ( (ascii_value >= 48 ) && (ascii_value < 57) ) ||
 		( (ascii_value >= 320) && (ascii_value <= 329) ))
 	{
-		try_set_number(b, xpos, ypos, ascii_value % 320);
+		try_set_number(b, xpos, ypos, ascii_value % 272 % 48);
 	}
+
 }
 
 /**
