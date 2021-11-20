@@ -5,6 +5,7 @@
 	! DESCRIPTION
 */
 
+#include "raylib.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -15,7 +16,7 @@
 
 
 // DEFINES
-#define BOARD_SIZE 3
+#define BOARD_SIZE 9
 #define SCREEN_SIZE 1000
 #define FONT_SIZE 80
 #define SEP 15
@@ -34,6 +35,10 @@ typedef struct
 board* create_board(uint16_t size);
 void destroy_board(board* b);
 void fill_board(board b, uint32_t val);
+void set_number(board b,uint32_t x, uint32_t y, uint32_t val);
+void change_value_mouse(board b, Vector2 mouse_pos, uint32_t ascii_value);
 void show_board(board b);
+bool is_valid(board b, uint32_t n, uint32_t x, uint32_t y);
+
 
 #endif

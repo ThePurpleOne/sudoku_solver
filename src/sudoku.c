@@ -7,10 +7,28 @@
 
 #include "../include/sudoku.h"
 
-#include "raylib.h"
 #include <math.h>
 
 // UTILS
+
+/**
+ * @brief Get the index for a flat array from x y
+ * 
+ * @param x
+ * @param y
+ * @return uint32_t
+ */
+uint32_t index_to_flat(int x, int y)
+{
+	return y * BOARD_SIZE + x; 
+}
+
+/**
+ * @brief Malloc and check for an error
+ * 
+ * @param n
+ * @return void*
+ */
 void* safe_malloc(size_t n)
 {
 	void* p = malloc(n);
@@ -22,22 +40,36 @@ void* safe_malloc(size_t n)
 	return p;
 }
 
+
+/**
+ * @brief Allocate memory for a board and returns a pointer to it
+ * 
+ * @param size
+ * @return board*
+ */
 board* create_board(uint16_t size)
 {
 	board* b = safe_malloc(sizeof(board));
 	b->size = size;
-	b->w = b->h = b->size * b->size;
+	b->w = b->h = b->size;
 	b->data = safe_malloc( (b->w)*(b->h) * sizeof(uint16_t) );
 	return b;
 }
 
+
+/**
+ * @brief Fill a given board with a value
+ * 
+ * @param b
+ * @param val
+ */
 void fill_board(board b, uint32_t val)
 {
 	for (int i = 0; i < b.w; i++)
 	{
 		for (int j = 0; j < b.h; j++)
 		{
-			b.data[i * b.w + j] = val;
+			b.data[index_to_flat(i, j)] = val;
 		}
 	}
 
@@ -52,6 +84,11 @@ void fill_board(board b, uint32_t val)
 	// }
 }
 
+/**
+ * @brief Free the momory allocated to a board
+ * 
+ * @param b
+ */
 void destroy_board(board* b)
 {
 	free(b->data);
@@ -72,9 +109,9 @@ void show_board(board b)
 		for (int x = 0; x < b.h; x++)
 		{
 			DrawRectangleLinesEx(	(Rectangle){x * cell_s,
-											y * cell_s,
-											cell_s,
-											cell_s},
+									y * cell_s,
+									cell_s,
+									cell_s},
 									4,
 									COLOR_SSEP);
 		}
@@ -99,19 +136,130 @@ void show_board(board b)
 	int xp, yp;
 	int number;
 	char text[2];
+
 	// Draw numbers
 	for (int i = 0; i < b.w; i++)
 	{
 		for (int j = 0; j < b.h; j++)
 		{
-			number = b.data[i * b.w + j];
+			number = b.data[index_to_flat(i, j)];
 			xp = cell_s * i + cell_s / 2 - FONT_SIZE / 4;
 			yp = cell_s * j + cell_s / 2 - FONT_SIZE / 2;
 			if(number != 0 && number < 10)
 			{
-				sprintf(text, "%ld", number);
+				sprintf(text, "%d", number);
 				DrawText(text, xp, yp, FONT_SIZE, WHITE);
 			}
 		}
 	}
+}
+
+/**
+ * @brief Set a number in the board
+ * 
+ * @param b 
+ * @param x
+ * @param y
+ * @param val
+ */
+void set_number(board b,uint32_t x, uint32_t y, uint32_t val)
+{
+	if(val == 0)
+		b.data[index_to_flat(x, y)] = val;
+
+	if(x > b.w || y > b.h)
+		return;
+	
+	if (!is_valid(b, val, x, y))
+		return;
+
+	b.data[index_to_flat(x, y)] = val;
+	printf("SETTED DATA[%d, %d] to %d\n", x, y, val);
+}
+
+/**
+ * @brief Change the value aimed by the mouse
+ * 
+ * @param mouse_pos
+ * @param ascii_value
+ */
+void change_value_mouse(board b, Vector2 mouse_pos, uint32_t ascii_value)
+{
+
+	// KEY_ZERO            = 48,       // Key: 0
+	// KEY_ONE             = 49,       // Key: 1
+	// KEY_TWO             = 50,       // Key: 2
+	// KEY_THREE           = 51,       // Key: 3
+	// KEY_FOUR            = 52,       // Key: 4
+	// KEY_FIVE            = 53,       // Key: 5
+	// KEY_SIX             = 54,       // Key: 6
+	// KEY_SEVEN           = 55,       // Key: 7
+	// KEY_EIGHT           = 56,       // Key: 8
+	// KEY_NINE            = 57,       // Key: 9
+
+
+	// KEY_KP_0            = 320,      // Key: Keypad 0
+	// KEY_KP_1            = 321,      // Key: Keypad 1
+	// KEY_KP_2            = 322,      // Key: Keypad 2
+	// KEY_KP_3            = 323,      // Key: Keypad 3
+	// KEY_KP_4            = 324,      // Key: Keypad 4
+	// KEY_KP_5            = 325,      // Key: Keypad 5
+	// KEY_KP_6            = 326,      // Key: Keypad 6
+	// KEY_KP_7            = 327,      // Key: Keypad 7
+	// KEY_KP_8            = 328,      // Key: Keypad 8
+	// KEY_KP_9            = 329,      // Key: Keypad 9
+
+	// GET POS FROM MOUSE X AND Y
+	uint32_t xpos = mouse_pos.x * BOARD_SIZE / SCREEN_SIZE;
+	uint32_t ypos = mouse_pos.y * BOARD_SIZE / SCREEN_SIZE;
+
+	// Check if value is valid
+	// Takes keypad too
+	if( ( (ascii_value > '0' ) && (ascii_value > '9') ) ||
+		( (ascii_value >= 320) && (ascii_value <= 329) ))
+	{
+		set_number(b, xpos, ypos, ascii_value % 320);
+	}
+}
+
+/**
+ * @brief Check if a number can be placed at a pos
+ * 
+ * @param b
+ * @param n
+ * @param x
+ * @param y
+ * @return true
+ * @return false
+ */
+bool is_valid(board b, uint32_t n, uint32_t x, uint32_t y)
+{
+	// Check row
+	for (int i = 0; i < b.w; i++)
+	{
+		if( n == b.data[index_to_flat(i, y)])
+			return false;
+	}
+
+	// Check col
+	for (int i = 0; i < b.h; i++)
+	{
+		if( n == b.data[index_to_flat(x, i)])
+			return false;
+	}
+
+	//Check square - should use sqrt of size but fuckit
+	int sq_x = x / 3;
+	int sq_y = y / 3;
+
+	for (int i = sq_x * 3; i < sq_x * 3 + 3; i++)
+	{
+		for (int j = sq_y * 3; j < sq_y * 3 + 3; j++)
+		{
+			if( n == b.data[index_to_flat(i, j)])
+				return false;
+		}
+	}
+
+	return true;
 }
