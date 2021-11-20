@@ -11,11 +11,11 @@ EXECUTABLE1  := main
 SOURCES1 += $(SRC)/$(EXECUTABLE1).c
 SOURCES1 += $(SRC)/sudoku.c
 
-.PHONY: all run clean # Specify these are not files but internal terms
+.PHONY: all run clean pre_build # Specify these are not files but internal terms
 
-all: $(BIN)/$(EXECUTABLE1)
+all: pre_build $(BIN)/$(EXECUTABLE1) 
 
-run: clean pre_build all 
+run: clean all 
 	clear
 	@echo "########## EXECUTE FIRST PROGRAM ##########"
 	./$(BIN)/$(EXECUTABLE1)
@@ -27,7 +27,7 @@ run: clean pre_build all
 # # Not optimal but succint and simple
 
 # COMPILE FIRST EXECUTABLE
-$(BIN)/$(EXECUTABLE1):  $(SOURCES1)
+$(BIN)/$(EXECUTABLE1): $(SOURCES1) 
 	@echo "########## COMPILING FIRST EXECUTABLE ##########"
 	$(CC) $(CFLAGS) -I $(INCLUDE) $^ -o $@ $(LIBRARIES)
 
@@ -35,5 +35,6 @@ clean:
 	@echo "########## CLEANING ##########"	
 	-rm $(BIN)/*
 
-pre_build:
-	mkdir -p bin
+# pre_build:
+# 	@echo "########## CREATING BIN DIR  ##########"
+# 	-mkdir -p $(BIN)
