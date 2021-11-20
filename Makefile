@@ -15,7 +15,7 @@ SOURCES1 += $(SRC)/sudoku.c
 
 all: $(BIN)/$(EXECUTABLE1)
 
-run: clean all
+run: clean pre_build all 
 	clear
 	@echo "########## EXECUTE FIRST PROGRAM ##########"
 	./$(BIN)/$(EXECUTABLE1)
@@ -35,3 +35,5 @@ clean:
 	@echo "########## CLEANING ##########"	
 	-rm $(BIN)/*
 
+pre_build:
+	mkdir -p bin
